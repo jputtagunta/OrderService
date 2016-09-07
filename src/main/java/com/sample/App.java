@@ -20,6 +20,11 @@ public class App
 			latch.await();
 			System.out.println("Calls to Service-AA and Service-B are done");
 			
+			/*
+			 * Here, Future.get() itself is a blocking call and it will block the current thread.
+			 * So, there is no need of latch to synchronize the completion of 2 service calls.
+			 * However, I left the latch part in place to show the idea expressed in the interview.
+			 */
 			int resultFromAA = futureOfAA.get();
 			int resultFromB = futureOfB.get();
 			
@@ -45,24 +50,33 @@ class ServiceAA implements Service {
 
 	@Override
 	public Integer execute() {
-		try{
-			System.out.println("Calling Service-A");
-			int resultFromA = 10; //assuming this is obtained here from Service-A
-			Thread.sleep(1000);
-			
-			System.out.println("Calling Service-AA using the result from Service-A");
-			
-			int resultFromAA = resultFromA * resultFromA; //assuming resultFromA is passed to Service AA
-			Thread.sleep(1000);
-			
-			return resultFromAA;
-		}
-		catch(InterruptedException e){
-			System.out.println("Service-AA execution was interrupted.");
-		}
-		return null;
+		System.out.println("Calling Service-A");
+		int resultFromA = callServiceA();
+		
+		System.out.println("Calling Service-AA using the result from Service-A");
+		int resultFromAA = callServiceAA(resultFromA);
+		
+		return resultFromAA;
 	}
 	
+	private int callServiceAA(int resultFromA) {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return resultFromA * resultFromA;
+	}
+
+	private int callServiceA() {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return 10;
+	}
+
 	@Override
 	public String getName() {
 		return "Service-AA";
